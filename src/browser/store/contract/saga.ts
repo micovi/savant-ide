@@ -49,6 +49,9 @@ export function* initContract() {
       case ContractActionTypes.DEPLOY:
         yield call(deployContract, action, db);
         break;
+      case ContractActionTypes.DEPLOYLIVE:
+        yield call(deployContractLive, action);
+        break;
       case ContractActionTypes.CALL:
         yield call(callTransition, action, db);
         break;
@@ -123,6 +126,31 @@ function* deployContract(action: ActionType<typeof contractActions.deploy>, db: 
       put(bcActions.updateAccount(updatedAccount)),
       yield put(contractActions.deploySuccess(contract)),
     ]);
+
+    statusCB({ status: ScillaBinStatus.SUCCESS, address, gasUsed, gasPrice: gasprice });
+  } catch (err) {
+    yield put(contractActions.deployError(err));
+    action.payload.statusCB({
+      status: ScillaBinStatus.FAILURE,
+      address: '',
+      gasUsed: 0,
+      gasPrice: action.payload.gasprice,
+      error: err,
+    });
+  }
+}
+
+
+function* deployContractLive(action: ActionType<typeof contractActions.deployLive>) {
+  try {
+    const { code, /*privateKey, network, init: pInit, msg, gaslimit,*/ gasprice, statusCB } = action.payload;
+    const { message: result } = yield api.checkContract(code);
+    if (!result) {
+      throw new Error('ABI could not be parsed.');
+    }
+
+    const address = 'test';
+    const gasUsed = 123;
 
     statusCB({ status: ScillaBinStatus.SUCCESS, address, gasUsed, gasPrice: gasprice });
   } catch (err) {

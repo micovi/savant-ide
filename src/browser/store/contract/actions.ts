@@ -46,6 +46,18 @@ export const deploy = createAction(ContractActionTypes.DEPLOY, (resolve) => {
     statusCB: (result: RunnerResult) => void,
   ) => resolve({ code, init: initParams, msg: msgParams, gaslimit, gasprice, deployer, statusCB });
 });
+export const deployLive = createAction(ContractActionTypes.DEPLOYLIVE, (resolve) => {
+  return (
+    code: string,
+    initParams: KVPair[],
+    msgParams: { [key: string]: string },
+    privateKey: string,
+    network: string,
+    gaslimit: number,
+    gasprice: number,
+    statusCB: (result: RunnerResult) => void,
+  ) => resolve({ code, init: initParams, msg: msgParams, gaslimit, gasprice, privateKey, network, statusCB });
+});
 export const deploySuccess = createAction(ContractActionTypes.DEPLOY_SUCCESS, (resolve) => {
   return (contract: Contract) => resolve({ contract });
 });

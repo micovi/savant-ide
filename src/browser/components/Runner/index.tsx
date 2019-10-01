@@ -102,6 +102,7 @@ interface DispatchProps {
   initContracts: typeof contractActions.init;
   initBlockchain: typeof bcActions.init;
   deployContract: typeof contractActions.deploy;
+  deployLiveContract: typeof contractActions.deployLive;
   callTransition: typeof contractActions.call;
 }
 
@@ -139,6 +140,7 @@ class Runner extends React.Component<Props> {
             callTransition={this.props.callTransition}
             isCallingTransition={this.props.isCallingTransition}
             deployContract={this.props.deployContract}
+            deployLiveContract={this.props.deployLiveContract}
             isDeployingContract={this.props.isDeployingContract}
             accounts={this.props.accounts}
             abi={(this.props.active && this.props.active.abi) || null}
@@ -163,6 +165,16 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
     gasprice: number,
     resultCb: (result: RunnerResult) => void,
   ) => dispatch(contractActions.deploy(code, init, msg, deployer, gaslimit, gasprice, resultCb)),
+  deployLiveContract: (
+    code: string,
+    init: KVPair[],
+    msg: { [key: string]: string },
+    privateKey: string,
+    network: string,
+    gaslimit: number,
+    gasprice: number,
+    resultCb: (result: RunnerResult) => void,
+  ) => dispatch(contractActions.deployLive(code, init, msg, privateKey, network, gaslimit, gasprice, resultCb)),
   callTransition: (
     address: string,
     transition: string,

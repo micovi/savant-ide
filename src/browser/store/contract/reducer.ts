@@ -61,6 +61,10 @@ const contractReducer: Reducer<ContractState, ContractAction> = (state = initial
       return { ...state, isDeployingContract: true };
     }
 
+    case getType(contractActions.deployLive): {
+      return { ...state, isDeployingContract: true };
+    }
+
     case getType(contractActions.deploySuccess): {
       const { contract } = action.payload;
       const newIndex = { ...state.contracts, [contract.address]: contract };

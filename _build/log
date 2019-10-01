@@ -1,0 +1,2 @@
+# dune build --profile release @install
+# OCAMLPARAM: unset

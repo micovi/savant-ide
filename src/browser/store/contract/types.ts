@@ -120,6 +120,7 @@ export const enum ContractActionTypes {
   CHECK = '@contract/CHECK',
   CHECK_SUCCESS = '@contract/CHECK_SUCCESS',
   CHECK_ERROR = '@contract/CHECK_ERROR',
+  DEPLOYLIVE = '@contract/DEPLOYLIVE',
   DEPLOY = '@contract/DEPLOY',
   DEPLOY_SUCCESS = '@contract/DEPLOY_SUCCESS',
   DEPLOY_ERROR = '@contract/DEPLOY_ERROR',

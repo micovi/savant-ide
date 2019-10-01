@@ -30,6 +30,17 @@ export type Deployer = (
   resultCb: (result: RunnerResult) => void,
 ) => void;
 
+export type LiveDeployer = (
+  code: string,
+  initParams: KVPair[],
+  msgParams: { [key: string]: string },
+  privateKey: string,
+  network: string,
+  gaslimit: number,
+  gasprice: number,
+  resultCb: (result: RunnerResult) => void,
+) => void;
+
 export type Caller = (
   address: string,
   transition: string,

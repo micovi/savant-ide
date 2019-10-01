@@ -23,13 +23,15 @@ import Tab from '@material-ui/core/Tab';
 import AssignmentIcon from '@material-ui/icons/Description';
 import PlayIcon from '@material-ui/icons/PlayCircleOutline';
 import SendIcon from '@material-ui/icons/Send';
+import LaunchIcon from '@material-ui/icons/Launch';
 import styled from 'styled-components';
 
 import CallTab from './Call';
 import DeployTab from './Deploy';
+import LiveDeployTab from './LiveDeploy';
 import StateTab from './State';
 
-import { Caller, Deployer } from '../types';
+import { Caller, Deployer, LiveDeployer } from '../types';
 import { ContractSrcFile } from '../../store/fs/types';
 import { Account } from '../../store/blockchain/types';
 import { ABI, Contract } from '../../store/contract/types';
@@ -56,6 +58,7 @@ const Content = styled.div`
 
 interface Props {
   deployContract: Deployer;
+  deployLiveContract: LiveDeployer;
   isDeployingContract: boolean;
   callTransition: Caller;
   isCallingTransition: boolean;
@@ -100,6 +103,14 @@ export default class RunnerNav extends React.Component<Props, State> {
             isDeploying={this.props.isDeployingContract}
           />
         );
+        case 3:
+          return (
+            <LiveDeployTab
+            files={this.props.files}
+            deployLiveContract={this.props.deployLiveContract}
+            isDeploying={this.props.isDeployingContract}
+          />
+          );
       default:
         return null;
     }
@@ -112,13 +123,14 @@ export default class RunnerNav extends React.Component<Props, State> {
           classes={{ root: 'tabs' }}
           value={this.state.value}
           onChange={this.handleChange}
-          fullWidth
+          fullWidth={false}
           indicatorColor="secondary"
           textColor="secondary"
         >
-          <Tab icon={<PlayIcon />} label="Call" />
+          <Tab style={{minWidth: 40}} icon={<PlayIcon />} label="Call" />
           <Tab icon={<AssignmentIcon />} label="State" />
-          <Tab icon={<SendIcon />} label="Deploy" />
+          <Tab icon={<SendIcon />} label="Local Deploy" />
+          <Tab icon={<LaunchIcon />} label="Live Deploy" />
         </Tabs>
         <Content>{this.renderContent()}</Content>
       </Wrapper>
