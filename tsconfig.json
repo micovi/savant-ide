@@ -32,6 +32,7 @@
     "pretty": true,
     "removeComments": true,
     "sourceMap": true,
+    "skipLibCheck": true,
     "preserveWatchOutput": true
   },
   "include": [
