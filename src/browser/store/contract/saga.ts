@@ -62,7 +62,7 @@ export function* initContract() {
 
 function* deployContractLive(action: ActionType<typeof contractActions.deployLive>) {
   try {
-    const { code, privateKey, network, init: pInit, msg, gaslimit, statusCB } = action.payload;
+    const { code, privateKey, network, init: pInit, msg, gaslimit, gasprice, statusCB } = action.payload;
     const { message: result } = yield api.checkContract(code);
     if (!result) {
       throw new Error('ABI could not be parsed.');
@@ -110,14 +110,19 @@ function* deployContractLive(action: ActionType<typeof contractActions.deployLiv
 
     // Instance of class Contract
     const zilContract = zilliqa.contracts.new(code, init);
-    const minGasPrice = yield zilliqa.blockchain.getMinimumGasPrice();
+
+    const myGasPrice = new BN(gasprice);
 
     // Deploy the contract
     const [deployTx] = yield zilContract.deploy({
       version: VERSION,
-      gasPrice: minGasPrice,
+      gasPrice: myGasPrice,
       gasLimit: Long.fromNumber(gaslimit)
     });
+
+    if(deployTx.id === undefined) {
+      throw new Error('Contract could not be deployed.');
+    }
 
     // Introspect the state of the underlying transaction
     console.log(`Deployment Transaction ID: ${deployTx.id}`);
@@ -141,9 +146,9 @@ function* deployContractLive(action: ActionType<typeof contractActions.deployLiv
 
     const gasUsed = deployTx.txParams.receipt.cumulative_gas;
 
-    statusCB({ status: ScillaBinStatus.SUCCESS, address: deployTx.id, gasUsed, gasPrice: minGasPrice });
+    statusCB({ status: ScillaBinStatus.SUCCESS, address: deployTx.id, gasUsed, gasPrice: myGasPrice.toNumber() });
   } catch (err) {
-    console.error(err);
+    console.log(err);
     yield put(contractActions.deployError(err));
     action.payload.statusCB({
       status: ScillaBinStatus.FAILURE,

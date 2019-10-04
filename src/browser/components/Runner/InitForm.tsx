@@ -83,7 +83,7 @@ export default class InitForm extends React.Component<Props, State> {
     ),
     msg: {
       _amount: { value: '0', touched: false, error: false },
-      gaslimit: { value: '1', touched: false, error: false },
+      gaslimit: { value: '5000', touched: false, error: false },
       gasprice: { value: 1000000000, touched: false, error: false },
     },
   };
