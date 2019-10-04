@@ -108,6 +108,8 @@ export const runner = async (opts: RunOpt) => {
 export const checker = async (opts: BaseOpt) => {
   try {
     const { stdout } = await execAsync(Paths.CHECKER, [
+      '-gaslimit',
+      '100000', // #TODO: Add Variable for gasLimit (Maybe check with minimum gas needed from blockchain API)
       '-libdir',
       opts.stdlib,
       '-contractinfo',

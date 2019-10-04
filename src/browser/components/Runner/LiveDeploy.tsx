@@ -33,9 +33,9 @@ import Select from '../Form/Select';
 import InitForm from './InitForm';
 import { Input } from '@material-ui/core';
 
-import { Long, bytes, units } from '@zilliqa-js/util';
+/* import { Long, bytes, units } from '@zilliqa-js/util';
 import { Zilliqa } from '@zilliqa-js/zilliqa';
-import { getAddressFromPrivateKey } from '@zilliqa-js/crypto';
+import { toBech32Address } from '@zilliqa-js/crypto'; */
 
 
 const Wrapper = styled.div`
@@ -66,11 +66,13 @@ interface State {
   result: RunnerResult | null;
   privateKey: string;
   network: string;
+  keystore: any;
 }
 
 export default class LiveDeployTab extends React.Component<Props, State> {
   state: State = {
     selected: '',
+    keystore: '',
     error: '',
     isChecking: false,
     privateKey: '',
@@ -100,6 +102,22 @@ export default class LiveDeployTab extends React.Component<Props, State> {
     });
   }
 
+  onChangeKeystore: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    e.preventDefault();
+
+    if(e.target.files !== null) {
+      const reader: FileReader = new FileReader();
+      reader.readAsText(e.target.files[0], 'UTF-8');
+
+      reader.onload = () => {
+          this.setState({
+            keystore: reader.result
+          });
+      };
+      
+    }
+  }
+
   onDeploy = (init: FieldDict, msg: MsgFieldDict) => {
     const { deployLiveContract, files } = this.props;
     const { privateKey, network } = this.state;
@@ -127,67 +145,55 @@ export default class LiveDeployTab extends React.Component<Props, State> {
 
   onDeployResult = (result: RunnerResult) => this.setState({ result });
 
+/* 
+  liveDeploy = async (init: FieldDict, msg: MsgFieldDict) => {
 
-  testDeploy = async () => {
-    const {privateKey, network} = this.state;
-    const {files} = this.props;
+    try {
+      const { privateKey, network } = this.state;
+      const { files } = this.props;
 
-    const zilliqa = new Zilliqa(network);
+      const zilliqa = new Zilliqa(network);
 
-    const chainId = 333;
-    const msgVersion = 1;
-    const VERSION = bytes.pack(chainId, msgVersion);
-
-    // import Zilliqa Account
-    zilliqa.wallet.addByPrivateKey(privateKey);
-
-    const address = getAddressFromPrivateKey(privateKey);
-
-    // Get Balance
-    const balance = await zilliqa.blockchain.getBalance(address);
-
-    console.log('Your balance', balance);
-    // Get Minimum Gas Price from blockchain
-/*     const minGasPrice = await zilliqa.blockchain.getMinimumGasPrice(); */
-
-    const myGasPrice = units.toQa('1000', units.Units.Li);
-
-    const sourceFile = files[this.state.selected];
-    const contractCode = sourceFile.code;
-
-    const init = [
-      // this parameter is mandatory for all init arrays
-      {
-        vname: '_scilla_version',
-        type: 'Uint32',
-        value: '0'
-      },
-      {
-        vname: 'owner',
-        type: 'ByStr20',
-        value: `${address}`
+      let chainId = 1;
+      if(network === 'https://dev-api.zilliqa.com') {
+        chainId = 333;
       }
-    ];
+      const msgVersion = 1;
+      const VERSION = bytes.pack(chainId, msgVersion);
 
-    // Instance of class Contract
-    const contract = zilliqa.contracts.new(contractCode, init);
+      // import Zilliqa Account
+      zilliqa.wallet.addByPrivateKey(privateKey);
 
-    // Deploy the contract
-    const [deployTx, hello] = await contract.deploy({
-      version: VERSION,
-      gasPrice: myGasPrice,
-      gasLimit: Long.fromNumber(10000)
-    });
+      const initParams = toScillaParams(init);
+      const { gaslimit, gasprice } = toMsgFields(msg);
+      const myGasPrice = units.toQa(gasprice, units.Units.Li);
+      const sourceFile = files[this.state.selected];
+      const contractCode = sourceFile.code;
 
-    // Introspect the state of the underlying transaction
-    console.log(`Deployment Transaction ID: ${deployTx.id}`);
-    console.log(`Deployment Transaction Receipt:`);
-    console.log(deployTx.txParams.receipt);
+      // Instance of class Contract
+      const contract = zilliqa.contracts.new(contractCode, initParams);
 
-    // Get the deployed contract address
-    console.log('The contract address is:');
-    console.log(hello.address);
-  }
+      // Deploy the contract
+      const [deployTx, contractData] = await contract.deploy({
+        version: VERSION,
+        gasPrice: myGasPrice,
+        gasLimit: Long.fromNumber(gaslimit)
+      });
+
+      // Introspect the state of the underlying transaction
+      console.log(`Deployment Transaction ID: ${deployTx.id}`);
+      console.log(deployTx.txParams);
+
+      // Get the deployed contract address
+      console.log('The contract address is:');
+      if (contractData.address !== undefined) {
+        console.log(toBech32Address(contractData.address));
+      }
+    } catch (error) {
+      console.error(error);
+    }
+ 
+  } */
 
   reset = () =>
     this.setState({
@@ -211,7 +217,7 @@ export default class LiveDeployTab extends React.Component<Props, State> {
         value: 'https://dev-api.zilliqa.com'
       },
       {
-        key: 'Kaya RPC (http://localhost:5555)',
+        key: 'IsolatedServer RPC (http://localhost:5555)',
         value: 'http://localhost:5555'
       }
     ];
@@ -228,10 +234,10 @@ export default class LiveDeployTab extends React.Component<Props, State> {
 
   componentDidUpdate(_: Props, prevState: State) {
     if (this.state.selected.length && prevState.selected !== this.state.selected) {
-      // const { code } = this.props.files[this.state.selected];
-      // const ctrl = new AbortController();
+      const { code } = this.props.files[this.state.selected];
+      const ctrl = new AbortController();
       this.setState({ isChecking: true, error: null });
-      /* api
+       api
         .checkContract(code, ctrl.signal)
         .then((res) => {
           if (res.result === 'error') {
@@ -244,7 +250,7 @@ export default class LiveDeployTab extends React.Component<Props, State> {
         })
         .catch((err) => {
           this.setState({ error: err.response ? err.response.message : err });
-        }); */
+        });
     }
   }
 
@@ -277,11 +283,20 @@ export default class LiveDeployTab extends React.Component<Props, State> {
 
     return (
       <Wrapper>
-        <Input
-          placeholder="Enter account Private Key"
-          value={privateKey}
-          onChange={this.onChangePrivateKey}
-        />
+      
+            <Input
+              type="text"
+              placeholder="Enter account Private Key"
+              value={privateKey}
+              onChange={this.onChangePrivateKey}
+            />
+            <h4>or select Keystore File</h4>
+            <Input
+              type="file"
+              placeholder="or select Keystore file"
+              onChange={this.onChangeKeystore}
+            />
+        <br/>
         <Select
           placeholder="Select network"
           items={this.getNetworkOptions()}
@@ -306,10 +321,6 @@ export default class LiveDeployTab extends React.Component<Props, State> {
         ) : (
           this.state.isChecking && <Loader delay={1001} message="Getting ABI..." />
         )}
-
-        <Button
-        onClick={this.testDeploy}
-        >Test Deploy</Button>
       </Wrapper>
     );
   }

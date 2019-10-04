@@ -23,7 +23,7 @@ const appDirectory = fs.realpathSync(process.cwd());
 const scillaDirectory =
   NODE_ENV === 'production'
     ? `/scilla/${SCILLA_VERSION}`
-    : path.resolve(appDirectory, '..', 'scilla');
+    : path.resolve(appDirectory, '../', 'scilla');
 const resolveScilla = (relativePath: string) => path.resolve(scillaDirectory, relativePath);
 
 export const Paths = {
