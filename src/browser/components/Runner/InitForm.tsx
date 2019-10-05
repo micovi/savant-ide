@@ -202,7 +202,7 @@ export default class InitForm extends React.Component<Props, State> {
           <Typography variant="body2" align="left" style={{ whiteSpace: 'pre' }}>
             {`Gas used: ${result.gasUsed}\nGas price: ${
               result.gasPrice
-            }\nTransaction cost: ${result.gasUsed * result.gasPrice} ZIL`}
+            }\nTransaction cost: ${result.gasUsed * result.gasPrice}`}
           </Typography>
           <Button
             color="primary"

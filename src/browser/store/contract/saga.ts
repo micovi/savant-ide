@@ -17,6 +17,7 @@
 
 import { all, actionChannel, select, call, fork, put, take } from 'redux-saga/effects';
 import { ActionType } from 'typesafe-actions';
+import hash from 'hash.js';
 import BN from 'bn.js';
 
 import { ApplicationState } from '../index';
@@ -27,6 +28,7 @@ import { ContractActionTypes, ScillaBinStatus, ABI } from './types';
 import * as bcActions from '../blockchain/actions';
 import * as api from '../../util/api';
 import config from '../../config';
+
 
 import { Long, bytes} from '@zilliqa-js/util';
 import { Zilliqa } from '@zilliqa-js/zilliqa';
@@ -44,11 +46,14 @@ export function* initContract() {
   yield put(contractActions.initSuccess(contracts));
 
   // block on _all_ actions
-  const chan = yield actionChannel([ContractActionTypes.DEPLOYLIVE, ContractActionTypes.CALL]);
+  const chan = yield actionChannel([ContractActionTypes.DEPLOY, ContractActionTypes.DEPLOYLIVE, ContractActionTypes.CALL]);
   while (true) {
     const action: ContractAction = yield take<ContractAction>(chan);
     // call the appropriate actions, passing the instance of db along
     switch (action.type) {
+      case ContractActionTypes.DEPLOY:
+        yield call(deployContract, action, db);
+        break;
       case ContractActionTypes.DEPLOYLIVE:
         yield call(deployContractLive, action);
         break;
@@ -57,6 +62,86 @@ export function* initContract() {
         break;
       default:
     }
+  }
+}
+
+function* deployContract(action: ActionType<typeof contractActions.deploy>, db: ContractStore) {
+  try {
+    const { code, deployer, init: pInit, msg, gaslimit, gasprice, statusCB } = action.payload;
+    const { message: result } = yield api.checkContract(code);
+    if (!result) {
+      throw new Error('ABI could not be parsed.');
+    }
+
+    const state: ApplicationState = yield select();
+
+    // we need to take this off the depoyer's balance
+    const txAmount = new BN(msg._amount || '0');
+
+    const address = hash
+      .sha256()
+      .update(deployer.address + (deployer.nonce + 1).toString())
+      .digest('hex')
+      .slice(-40);
+
+    const init = [
+      ...pInit,
+      { vname: '_this_address', type: 'ByStr20', value: `0x${address.toString()}` },
+      { vname: '_creation_block', type: 'BNum', value: state.blockchain.blockNum.toString() },
+      { vname: '_scilla_version', type: 'Uint32', value: config.SCILLA_VERSION },
+    ];
+
+    const blockchain = [
+      { vname: 'BLOCKNUMBER', type: 'BNum', value: state.blockchain.blockNum.toString() },
+    ];
+
+    const payload = {
+      code,
+      init: JSON.stringify(init),
+      blockchain: JSON.stringify(blockchain),
+      gaslimit,
+    };
+
+    const res = yield api.callContract(payload);
+
+    const gasUsed = gaslimit - parseInt(res.message.gas_remaining, 10);
+
+    const updatedAccount = {
+      ...deployer,
+      nonce: deployer.nonce + 1,
+      balance: new BN(deployer.balance)
+        .sub(txAmount)
+        .sub(new BN(gasUsed * gasprice))
+        .toString(10),
+    };
+
+    const contract = {
+      abi: JSON.parse(result).contract_info,
+      code,
+      init,
+      state: [{ vname: '_balance', type: 'Uint128', value: txAmount.toString() }],
+      previousStates: [],
+      eventLog: [],
+      messageLog: [],
+      address,
+    };
+
+    yield db.set(address, contract);
+    yield all([
+      put(bcActions.updateAccount(updatedAccount)),
+      yield put(contractActions.deploySuccess(contract)),
+    ]);
+
+    statusCB({ status: ScillaBinStatus.SUCCESS, address, gasUsed, gasPrice: gasprice });
+  } catch (err) {
+    yield put(contractActions.deployError(err));
+    action.payload.statusCB({
+      status: ScillaBinStatus.FAILURE,
+      address: '',
+      gasUsed: 0,
+      gasPrice: action.payload.gasprice,
+      error: err,
+    });
   }
 }
 
