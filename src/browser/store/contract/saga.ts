@@ -69,8 +69,6 @@ function* deployContractLive(action: ActionType<typeof contractActions.deployLiv
     }
     
 
-    const state: ApplicationState = yield select();
-
     // we need to take this off the depoyer's balance
     const txAmount = new BN(msg._amount || '0');
 
@@ -92,21 +90,8 @@ function* deployContractLive(action: ActionType<typeof contractActions.deployLiv
 
     const init = [
       ...pInit,
-      { vname: '_this_address', type: 'ByStr20', value: `0x${address.toString()}` },
-      { vname: '_creation_block', type: 'BNum', value: state.blockchain.blockNum.toString() },
       { vname: '_scilla_version', type: 'Uint32', value: config.SCILLA_VERSION },
     ];
-
-   /*  const blockchain = [
-      { vname: 'BLOCKNUMBER', type: 'BNum', value: state.blockchain.blockNum.toString() },
-    ]; */
-
-    /* const payload = {
-      code,
-      init: JSON.stringify(init),
-      blockchain: JSON.stringify(blockchain),
-      gaslimit,
-    }; */
 
     // Instance of class Contract
     const zilContract = zilliqa.contracts.new(code, init);
