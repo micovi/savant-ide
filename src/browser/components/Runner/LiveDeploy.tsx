@@ -16,7 +16,6 @@
  */
 
 import * as React from 'react';
-import Button from '@material-ui/core/Button';
 
 import Typography from '@material-ui/core/Typography';
 import styled from 'styled-components';
@@ -31,10 +30,10 @@ import * as api from '../../util/api';
 import { toMsgFields, toScillaParams, FieldDict, MsgFieldDict } from '../../util/form';
 import Select from '../Form/Select';
 import InitForm from './InitForm';
-import { Input } from '@material-ui/core';
+import { Input, Button } from '@material-ui/core';
+import { Zilliqa } from '@zilliqa-js/zilliqa';
 
 /* import { Long, bytes, units } from '@zilliqa-js/util';
-import { Zilliqa } from '@zilliqa-js/zilliqa';
 import { toBech32Address } from '@zilliqa-js/crypto'; */
 
 
@@ -52,6 +51,16 @@ const Wrapper = styled.div`
   }
 `;
 
+const Box = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  > * {
+    width: 100%;
+  }
+`;
+
 interface Props {
   deployLiveContract: LiveDeployer;
   isDeploying: boolean;
@@ -60,6 +69,7 @@ interface Props {
 
 interface State {
   error: any;
+  decryptError: any;
   isChecking: boolean;
   selected: string;
   abi: ABI | null;
@@ -67,6 +77,8 @@ interface State {
   privateKey: string;
   network: string;
   keystore: any;
+  passphrase: string;
+  wallet: any;
 }
 
 export default class LiveDeployTab extends React.Component<Props, State> {
@@ -74,11 +86,14 @@ export default class LiveDeployTab extends React.Component<Props, State> {
     selected: '',
     keystore: '',
     error: '',
+    decryptError: '',
     isChecking: false,
     privateKey: '',
     network: '',
     abi: null,
     result: null,
+    passphrase: '',
+    wallet: null
   };
 
   onSelectContract: React.ChangeEventHandler<HTMLSelectElement> = (e) => {
@@ -105,25 +120,68 @@ export default class LiveDeployTab extends React.Component<Props, State> {
   onChangeKeystore: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     e.preventDefault();
 
-    if(e.target.files !== null) {
+    if (e.target.files !== null) {
       const reader: FileReader = new FileReader();
       reader.readAsText(e.target.files[0], 'UTF-8');
 
       reader.onload = () => {
-          this.setState({
-            keystore: reader.result
-          });
+        this.setState({
+          keystore: reader.result
+        });
       };
-      
+
     }
+  }
+
+  onChangePassphrase: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+    e.preventDefault();
+
+    this.setState({
+      passphrase: e.target.value
+    });
+  }
+
+  onAccessWallet: React.MouseEventHandler<HTMLButtonElement> = async (e) => {
+    e.preventDefault();
+
+    this.setState({
+      decryptError: null
+    });
+
+    try {
+
+      const { keystore, passphrase, network, privateKey } = this.state;
+
+      const zilliqa = new Zilliqa(network);
+
+      if (keystore && passphrase) {
+        await zilliqa.wallet.addByKeystore(keystore, passphrase);
+      } else {
+        await zilliqa.wallet.addByPrivateKey(privateKey);
+      }
+
+      const account = zilliqa.wallet.defaultAccount;
+
+      if (account !== undefined) {
+        this.setState({
+          wallet: account,
+          privateKey: account.privateKey
+        });
+      }
+    } catch (error) {
+      this.setState({
+        decryptError: error.message
+      });
+    }
+
   }
 
   onDeploy = (init: FieldDict, msg: MsgFieldDict) => {
     const { deployLiveContract, files } = this.props;
-    const { privateKey, network } = this.state;
+    const { wallet, network } = this.state;
 
     // this case should never arise, but we have to satisfy the typechecker.
-    if (!privateKey || !network) {
+    if (!wallet || !network) {
       return;
     }
 
@@ -135,7 +193,7 @@ export default class LiveDeployTab extends React.Component<Props, State> {
       sourceFile.code,
       initParams,
       msgParams,
-      privateKey,
+      wallet.privateKey,
       network,
       gaslimit,
       gasprice,
@@ -144,56 +202,6 @@ export default class LiveDeployTab extends React.Component<Props, State> {
   };
 
   onDeployResult = (result: RunnerResult) => this.setState({ result });
-
-/* 
-  liveDeploy = async (init: FieldDict, msg: MsgFieldDict) => {
-
-    try {
-      const { privateKey, network } = this.state;
-      const { files } = this.props;
-
-      const zilliqa = new Zilliqa(network);
-
-      let chainId = 1;
-      if(network === 'https://dev-api.zilliqa.com') {
-        chainId = 333;
-      }
-      const msgVersion = 1;
-      const VERSION = bytes.pack(chainId, msgVersion);
-
-      // import Zilliqa Account
-      zilliqa.wallet.addByPrivateKey(privateKey);
-
-      const initParams = toScillaParams(init);
-      const { gaslimit, gasprice } = toMsgFields(msg);
-      const myGasPrice = units.toQa(gasprice, units.Units.Li);
-      const sourceFile = files[this.state.selected];
-      const contractCode = sourceFile.code;
-
-      // Instance of class Contract
-      const contract = zilliqa.contracts.new(contractCode, initParams);
-
-      // Deploy the contract
-      const [deployTx, contractData] = await contract.deploy({
-        version: VERSION,
-        gasPrice: myGasPrice,
-        gasLimit: Long.fromNumber(gaslimit)
-      });
-
-      // Introspect the state of the underlying transaction
-      console.log(`Deployment Transaction ID: ${deployTx.id}`);
-      console.log(deployTx.txParams);
-
-      // Get the deployed contract address
-      console.log('The contract address is:');
-      if (contractData.address !== undefined) {
-        console.log(toBech32Address(contractData.address));
-      }
-    } catch (error) {
-      console.error(error);
-    }
- 
-  } */
 
   reset = () =>
     this.setState({
@@ -237,7 +245,7 @@ export default class LiveDeployTab extends React.Component<Props, State> {
       const { code } = this.props.files[this.state.selected];
       const ctrl = new AbortController();
       this.setState({ isChecking: true, error: null });
-       api
+      api
         .checkContract(code, ctrl.signal)
         .then((res) => {
           if (res.result === 'error') {
@@ -255,7 +263,7 @@ export default class LiveDeployTab extends React.Component<Props, State> {
   }
 
   render() {
-    const { privateKey, abi, error, selected, network, result } = this.state;
+    const { privateKey, abi, error, decryptError, selected, network, result, keystore, passphrase, wallet } = this.state;
 
     if (error && error.length) {
       return (
@@ -283,44 +291,91 @@ export default class LiveDeployTab extends React.Component<Props, State> {
 
     return (
       <Wrapper>
-      
-            <Input
-              type="text"
-              placeholder="Enter account Private Key"
-              value={privateKey}
-              onChange={this.onChangePrivateKey}
-            />
-            <h4>or select Keystore File</h4>
-            <Input
-              type="file"
-              placeholder="or select Keystore file"
-              onChange={this.onChangeKeystore}
-            />
-        <br/>
         <Select
           placeholder="Select network"
           items={this.getNetworkOptions()}
           value={network}
           onChange={this.onSelectNetwork}
         />
-        <Select
-          placeholder="Choose a scilla source file"
-          items={this.getContractOptions()}
-          value={selected}
-          onChange={this.onSelectContract}
-        />
-        {privateKey && abi ? (
-          <InitForm
-            key={abi.vname}
-            handleReset={this.reset}
-            handleSubmit={this.onDeploy}
-            isDeploying={this.props.isDeploying}
-            abiParams={abi.params}
-            result={result}
-          />
-        ) : (
-          this.state.isChecking && <Loader delay={1001} message="Getting ABI..." />
-        )}
+
+        {network ? (
+          <Box>
+            {wallet ? (
+              <Box>
+                <p>Wallet Address: {wallet.address}</p>
+
+                <br/>
+
+                <Select
+                  placeholder="Choose contract you want to deploy"
+                  items={this.getContractOptions()}
+                  value={selected}
+                  onChange={this.onSelectContract}
+                />
+
+                {wallet && abi ? (
+                  <InitForm
+                    key={abi.vname}
+                    handleReset={this.reset}
+                    handleSubmit={this.onDeploy}
+                    isDeploying={this.props.isDeploying}
+                    abiParams={abi.params}
+                    result={result}
+                  />
+                ) : (
+                    this.state.isChecking && <Loader delay={1001} message="Getting ABI..." />
+                  )}
+              </Box>
+            ) : (
+                <Box>
+                  {!keystore ? (
+                    <Box>
+                      <Input
+                        type="text"
+                        placeholder="Enter account Private Key"
+                        value={privateKey}
+                        onChange={this.onChangePrivateKey}
+                      />
+                      <h4>or select Keystore File</h4>
+                    </Box>
+                  ) : null}
+
+                  <Input
+                    type="file"
+                    onChange={this.onChangeKeystore}
+                  />
+
+                  <br />
+
+                  {(keystore && privateKey === '') ? (
+                    <Input
+                      type="password"
+                      placeholder="Enter passphrase to decrypt Keystore file"
+                      onChange={this.onChangePassphrase}
+                    />
+                  ) : null}
+
+                  {(keystore && passphrase) || (privateKey) ? (
+                    <Button
+                      variant="contained"
+                      onClick={this.onAccessWallet}
+                    >Access Wallet</Button>
+                  ) : null}
+
+                  <br />
+
+                  {(decryptError && decryptError.length) ?
+                    (
+                      <Status>
+                        <Typography color="error" variant="body2">
+                          {decryptError}
+                        </Typography>
+                      </Status>
+                    ) : null}
+                </Box>
+              )}
+          </Box>
+        ) : null}
       </Wrapper>
     );
   }

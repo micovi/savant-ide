@@ -197,7 +197,7 @@ export default class InitForm extends React.Component<Props, State> {
       return (
         <StatusWrapper>
           <Typography variant="body2" align="left">
-            {`Your contract was successfully deployed to 0x${result.address.toUpperCase()}`}
+            {`Your contract was successfully deployed to 0x${result.address}`}
           </Typography>
           <Typography variant="body2" align="left" style={{ whiteSpace: 'pre' }}>
             {`Gas used: ${result.gasUsed}\nGas price: ${
