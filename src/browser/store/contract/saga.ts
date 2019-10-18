@@ -174,7 +174,7 @@ function* deployContractLive(action: ActionType<typeof contractActions.deployLiv
     // import Zilliqa Account
     zilliqa.wallet.addByPrivateKey(privateKey);
 
-    const address = getAddressFromPrivateKey(privateKey);
+   // const address = getAddressFromPrivateKey(privateKey);
 
     // const myGasPrice = units.toQa(gasprice, units.Units.Li);
 
