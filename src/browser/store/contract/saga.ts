@@ -32,8 +32,6 @@ import config from '../../config';
 
 import { Long, bytes} from '@zilliqa-js/util';
 import { Zilliqa } from '@zilliqa-js/zilliqa';
-import { getAddressFromPrivateKey } from '@zilliqa-js/crypto';
-
 type ContractAction = ActionType<typeof contractActions>;
 
 export function* initContract() {
