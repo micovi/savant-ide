@@ -189,7 +189,7 @@ function* deployContractLive(action: ActionType<typeof contractActions.deployLiv
     const myGasPrice = new BN(gasprice);
 
     // Deploy the contract
-    const [deployTx] = yield zilContract.deploy({
+    const [deployTx, ct] = yield zilContract.deploy({
       version: VERSION,
       gasPrice: myGasPrice,
       gasLimit: Long.fromNumber(gaslimit)
@@ -201,7 +201,7 @@ function* deployContractLive(action: ActionType<typeof contractActions.deployLiv
 
     // Introspect the state of the underlying transaction
     console.log(`Deployment Transaction ID: ${deployTx.id}`);
-    console.log(deployTx.txParams);
+    console.log(ct);
 
 
     const contract = {
@@ -212,12 +212,12 @@ function* deployContractLive(action: ActionType<typeof contractActions.deployLiv
       previousStates: [],
       eventLog: [],
       messageLog: [],
-      address,
+      address: ct.address,
       type: 'live',
       network
     };
 
-    yield db.set(address, contract);
+    yield db.set(ct.address, contract);
 
     yield all([
       yield put(contractActions.deploySuccess(contract)),
