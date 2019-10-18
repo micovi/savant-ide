@@ -223,7 +223,7 @@ function* deployContractLive(action: ActionType<typeof contractActions.deployLiv
 
     const gasUsed = deployTx.txParams.receipt.cumulative_gas;
 
-    statusCB({ status: ScillaBinStatus.SUCCESS, address: deployTx.id, gasUsed, gasPrice: myGasPrice.toNumber() });
+    statusCB({ status: ScillaBinStatus.SUCCESS, address: ct.address, gasUsed, gasPrice: myGasPrice.toNumber() });
   } catch (err) {
     console.log(err);
     yield put(contractActions.deployError(err));
@@ -285,61 +285,15 @@ function* callLiveTransition(action: ActionType<typeof contractActions.callLive>
 
     // Retrieving the transaction receipt (See note 2)
     console.log('call TX', callTx);
-/* 
-    const state: ApplicationState = yield select();
-    const contractStorage = state.contract.contracts[address];
-    // get init params
-    const init = contractStorage.init;
 
-    // get previous state if any
-    const contractState = contractStorage.state;
+      const gasUsed = callTx.receipt.cumulative_gas;
+      const gasprice = 1000000000;
 
-    // get message
-    const message = {
-      _tag: transition,
-      _amount: txAmount.toString(10),
-      _sender: `${walletAddress}`,
-      params: tParams,
-    };
+    /* yield all([
+      put(contractActions.callSuccess(address, deployedContract)),
+    ]); */
 
- const payload = {
-      code: contractStorage.code,
-      init: JSON.stringify(init),
-      state: JSON.stringify(contractState),
-      message: JSON.stringify(message),
-      gaslimit,
-    };
-
-    const res: api.CallResponse = yield api.callContract(payload);
-
-    const { message: msg } = res;
-
-    const gasUsed = gaslimit - parseInt(msg.gas_remaining, 10);
-
-    const updatedContract: typeof contractStorage = {
-      ...contractStorage,
-      state: msg.states,
-      previousStates: [...contractStorage.previousStates, contractStorage.state],
-      eventLog: [...contractStorage.eventLog, ...msg.events],
-      messageLog: [...contractStorage.messageLog, msg.message],
-    };
-
-    yield db.set(address, updatedContract);
-
-    yield all([
-      put(contractActions.callSuccess(contractStorage.address, updatedContract)),
-      ...msg.events.map((event) =>
-        put(
-          contractActions.addEvent(
-            contractStorage.address,
-            (contractStorage.abi as ABI).vname,
-            event,
-          ),
-        ),
-      ),
-    ]);
-
-    statusCB({ status: ScillaBinStatus.SUCCESS, address, gasUsed, gasPrice: gasprice }); */
+    statusCB({ status: ScillaBinStatus.SUCCESS,address, gasUsed, gasPrice: gasprice });
   } catch (err) {
     yield put(contractActions.callError(address, err));
     statusCB({
