@@ -28,10 +28,11 @@ import styled from 'styled-components';
 
 import CallTab from './Call';
 import DeployTab from './Deploy';
+import LiveCallTab from './LiveCall';
 import LiveDeployTab from './LiveDeploy';
 import StateTab from './State';
 
-import { Caller, Deployer, LiveDeployer } from '../types';
+import { LiveCaller, Caller, Deployer, LiveDeployer } from '../types';
 import { ContractSrcFile } from '../../store/fs/types';
 import { Account } from '../../store/blockchain/types';
 import { ABI, Contract } from '../../store/contract/types';
@@ -61,6 +62,7 @@ interface Props {
   deployLiveContract: LiveDeployer;
   isDeployingContract: boolean;
   callTransition: Caller;
+  callLiveTransition: LiveCaller;
   isCallingTransition: boolean;
   accounts: { [address: string]: Account };
   deployedContracts: { [address: string]: Contract };
@@ -103,14 +105,22 @@ export default class RunnerNav extends React.Component<Props, State> {
             isDeploying={this.props.isDeployingContract}
           />
         );
-        case 3:
-          return (
-            <LiveDeployTab
+      case 3:
+        return (
+          <LiveDeployTab
             files={this.props.files}
             deployLiveContract={this.props.deployLiveContract}
             isDeploying={this.props.isDeployingContract}
           />
-          );
+        );
+      case 4:
+        return (
+          <LiveCallTab
+            deployedContracts={this.props.deployedContracts}
+            callTransition={this.props.callLiveTransition}
+            isCalling={this.props.isCallingTransition}
+          />
+        );
       default:
         return null;
     }
@@ -127,10 +137,11 @@ export default class RunnerNav extends React.Component<Props, State> {
           indicatorColor="secondary"
           textColor="secondary"
         >
-          <Tab style={{minWidth: 40}} icon={<PlayIcon />} label="Call" />
+          <Tab style={{ minWidth: 40 }} icon={<PlayIcon />} label="Call" />
           <Tab icon={<AssignmentIcon />} label="State" />
           <Tab icon={<SendIcon />} label="Local Deploy" />
           <Tab icon={<LaunchIcon />} label="Live Deploy" />
+          <Tab icon={<PlayIcon />} label="Live Call" />
         </Tabs>
         <Content>{this.renderContent()}</Content>
       </Wrapper>

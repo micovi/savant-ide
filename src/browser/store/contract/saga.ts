@@ -46,7 +46,7 @@ export function* initContract() {
   yield put(contractActions.initSuccess(contracts));
 
   // block on _all_ actions
-  const chan = yield actionChannel([ContractActionTypes.DEPLOY, ContractActionTypes.DEPLOYLIVE, ContractActionTypes.CALL]);
+  const chan = yield actionChannel([ContractActionTypes.DEPLOY, ContractActionTypes.DEPLOYLIVE, ContractActionTypes.CALL, ContractActionTypes.CALLLIVE]);
   while (true) {
     const action: ContractAction = yield take<ContractAction>(chan);
     // call the appropriate actions, passing the instance of db along
@@ -55,10 +55,13 @@ export function* initContract() {
         yield call(deployContract, action, db);
         break;
       case ContractActionTypes.DEPLOYLIVE:
-        yield call(deployContractLive, action);
+        yield call(deployContractLive, action, db);
         break;
       case ContractActionTypes.CALL:
         yield call(callTransition, action, db);
+        break;
+      case ContractActionTypes.CALLLIVE:
+        yield call(callLiveTransition, action, db);
         break;
       default:
     }
@@ -124,6 +127,8 @@ function* deployContract(action: ActionType<typeof contractActions.deploy>, db: 
       eventLog: [],
       messageLog: [],
       address,
+      type: 'local',
+      network: null
     };
 
     yield db.set(address, contract);
@@ -145,7 +150,7 @@ function* deployContract(action: ActionType<typeof contractActions.deploy>, db: 
   }
 }
 
-function* deployContractLive(action: ActionType<typeof contractActions.deployLive>) {
+function* deployContractLive(action: ActionType<typeof contractActions.deployLive>, db: ContractStore) {
   try {
     const { code, privateKey, network, init: pInit, msg, gaslimit, gasprice, statusCB } = action.payload;
     const { message: result } = yield api.checkContract(code);
@@ -208,7 +213,11 @@ function* deployContractLive(action: ActionType<typeof contractActions.deployLiv
       eventLog: [],
       messageLog: [],
       address,
+      type: 'live',
+      network
     };
+
+    yield db.set(address, contract);
 
     yield all([
       yield put(contractActions.deploySuccess(contract)),
@@ -225,6 +234,121 @@ function* deployContractLive(action: ActionType<typeof contractActions.deployLiv
       address: '',
       gasUsed: 0,
       gasPrice: action.payload.gasprice,
+      error: err,
+    });
+  }
+}
+
+function* callLiveTransition(action: ActionType<typeof contractActions.callLive>, db: ContractStore) {
+  const {
+    address,
+    transition,
+    tParams,
+    msgParams,
+    privateKey,
+    network,
+    gaslimit,
+    statusCB,
+  } = action.payload;
+
+  try {
+
+    const zilliqa = new Zilliqa(network);
+
+    let chainId = 1;
+    if (network === 'https://dev-api.zilliqa.com') {
+      chainId = 333;
+    }
+    const msgVersion = 1;
+    const VERSION = bytes.pack(chainId, msgVersion);
+
+    // import Zilliqa Account
+    zilliqa.wallet.addByPrivateKey(privateKey);
+
+    // const myGasPrice = units.toQa(gasprice, units.Units.Li);
+
+
+    // we need to take this off the caller's balance
+    const txAmount = new BN(msgParams._amount || '0');
+
+    const deployedContract = zilliqa.contracts.at(address);
+
+    const callTx = yield deployedContract.call(
+      transition,
+      tParams,
+      {
+        // amount, gasPrice and gasLimit must be explicitly provided
+        version: VERSION,
+        amount: txAmount,
+        gasPrice: new BN(1000000000),
+        gasLimit: Long.fromNumber(gaslimit)
+      }
+    );
+
+    // Retrieving the transaction receipt (See note 2)
+    console.log('call TX', callTx);
+/* 
+    const state: ApplicationState = yield select();
+    const contractStorage = state.contract.contracts[address];
+    // get init params
+    const init = contractStorage.init;
+
+    // get previous state if any
+    const contractState = contractStorage.state;
+
+    // get message
+    const message = {
+      _tag: transition,
+      _amount: txAmount.toString(10),
+      _sender: `${walletAddress}`,
+      params: tParams,
+    };
+
+ const payload = {
+      code: contractStorage.code,
+      init: JSON.stringify(init),
+      state: JSON.stringify(contractState),
+      message: JSON.stringify(message),
+      gaslimit,
+    };
+
+    const res: api.CallResponse = yield api.callContract(payload);
+
+    const { message: msg } = res;
+
+    const gasUsed = gaslimit - parseInt(msg.gas_remaining, 10);
+
+    const updatedContract: typeof contractStorage = {
+      ...contractStorage,
+      state: msg.states,
+      previousStates: [...contractStorage.previousStates, contractStorage.state],
+      eventLog: [...contractStorage.eventLog, ...msg.events],
+      messageLog: [...contractStorage.messageLog, msg.message],
+    };
+
+    yield db.set(address, updatedContract);
+
+    yield all([
+      put(contractActions.callSuccess(contractStorage.address, updatedContract)),
+      ...msg.events.map((event) =>
+        put(
+          contractActions.addEvent(
+            contractStorage.address,
+            (contractStorage.abi as ABI).vname,
+            event,
+          ),
+        ),
+      ),
+    ]);
+
+    statusCB({ status: ScillaBinStatus.SUCCESS, address, gasUsed, gasPrice: gasprice }); */
+  } catch (err) {
+    yield put(contractActions.callError(address, err));
+    statusCB({
+      status: ScillaBinStatus.FAILURE,
+      address,
+      gasPrice: action.payload.gasprice,
+      gasUsed: 0,
       error: err,
     });
   }

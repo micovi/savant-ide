@@ -74,6 +74,8 @@ export interface Contract {
   previousStates: KVPair[][];
   eventLog: ContractEvent[];
   messageLog: ContractMessage[];
+  type: string;
+  network: string | null;
 }
 
 interface ContractPointer {
@@ -125,6 +127,7 @@ export const enum ContractActionTypes {
   DEPLOY_SUCCESS = '@contract/DEPLOY_SUCCESS',
   DEPLOY_ERROR = '@contract/DEPLOY_ERROR',
   CALL = '@contract/CALL',
+  CALLLIVE = '@contract/CALLLIVE',
   CALL_SUCCESS = '@contract/CALL_SUCCESS',
   CALL_ERROR = '@contract/CALL_ERROR',
   ADD_EVENT = '@contract/ADD_EVENT',

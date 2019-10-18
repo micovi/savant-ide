@@ -51,3 +51,15 @@ export type Caller = (
   gasprice: number,
   resultCb: (result: RunnerResult) => void,
 ) => void;
+
+export type LiveCaller = (
+  address: string,
+  transition: string,
+  tParams: KVPair[],
+  msgParams: { [key: string]: string },
+  privateKey: string,
+  network: string,
+  gaslimit: number,
+  gasprice: number,
+  resultCb: (result: RunnerResult) => void,
+) => void;

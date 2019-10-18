@@ -120,12 +120,20 @@ export default class CallTab extends React.Component<Props, State> {
 
   getDeployedContractOptions = (): Option[] => {
     const { deployedContracts } = this.props;
+    
+    const filtered = Object.values(deployedContracts).filter((contract:Contract) => {
+      if(contract.type === undefined || contract.type !== 'live') {
+        return true;
+      }
 
-    return Object.keys(deployedContracts).map((address) => {
-      const contract = deployedContracts[address];
-      const key = `0x${address.toUpperCase()} (${(contract.abi && contract.abi.vname) || ''})`;
-      const value = address;
-      return { key, value };
+      return false;
+    });
+
+    return filtered.map(contract => {
+      const key = `0x${contract.address.toUpperCase()} (${(contract.abi && contract.abi.vname) || ''})`;
+      const value = contract.address;
+
+      return {key, value};
     });
   };
 

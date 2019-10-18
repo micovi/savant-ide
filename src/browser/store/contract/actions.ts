@@ -87,6 +87,20 @@ export const callError = createAction(ContractActionTypes.CALL_ERROR, (resolve) 
   return (address: string, error: any) => resolve({ address, error });
 });
 
+export const callLive = createAction(ContractActionTypes.CALLLIVE, (resolve) => {
+  return (
+    address: string,
+    transition: string,
+    tParams: KVPair[],
+    msgParams: { [key: string]: string },
+    privateKey: string,
+    network: string,
+    gaslimit: number,
+    gasprice: number,
+    statusCB: (result: RunnerResult) => void,
+  ) => resolve({ address, transition, privateKey, network, tParams, msgParams, gaslimit, gasprice, statusCB });
+});
+
 /**
  * Event actions
  */

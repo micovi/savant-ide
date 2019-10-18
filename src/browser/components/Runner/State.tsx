@@ -34,7 +34,7 @@ const noop = () => {
 };
 
 const labelRender = (key: string[]) => {
-  return <span>{key.length > 1 ? key[0] : `0x${key[0].toUpperCase()}`}:</span>;
+  return <span>{key.length > 1 ? key[0] : `0x${key[0]}`}:</span>;
 };
 
 const valueRender = (value: string, ...args: any[]) => {
