@@ -29,6 +29,8 @@ import { Account } from '../../store/blockchain/types';
 import { Contract } from '../../store/contract/types';
 import { deserialiseContractState } from '../../util/encoding';
 
+import StateCaller from './StateCaller';
+
 const noop = () => {
   return <React.Fragment />;
 };
@@ -46,6 +48,39 @@ const valueRender = (value: string, ...args: any[]) => {
       <Collapsible expander={expander}>
         {() => <code style={{ whiteSpace: 'pre' }}>{`\n${value}`}</code>}
       </Collapsible>
+    );
+  }
+
+  return <span>{value}</span>;
+};
+
+const labelRenderLive = (key: string[]) => {
+  return <span>{key.length > 1 ? key[0] : `${key[0]}`}:</span>;
+};
+
+const valueRenderLive = (value: string, ...args: any[]) => {
+  if (args[1] === 'code') {
+    const expander = (isOpen: boolean) => (
+      <span style={{ color: '#000', cursor: 'pointer' }}>{isOpen ? 'hide' : 'show'}</span>
+    );
+    return (
+      <Collapsible expander={expander}>
+        {() => <code style={{ whiteSpace: 'pre' }}>{`\n${value}`}</code>}
+      </Collapsible>
+    );
+  }
+
+  console.log(args);
+
+  if(args[1] === 'init') {
+    return (
+      <StateCaller address={args[2]} network={args[0]} type="init" />
+    );
+  }
+
+  if(args[1] === 'state') {
+    return (
+      <StateCaller address={args[2]} network={args[0]} type="state" />
     );
   }
 
@@ -92,23 +127,45 @@ export default class StateTree extends React.Component<Props, State> {
   getContracts = () => {
     const { contracts } = this.props;
 
-    if (this.state.native) {
-      return Object.keys(contracts).reduce((acc, address) => {
-        return {
-          ...acc,
-          [address]: {
-            ...contracts[address],
-            init: deserialiseContractState(contracts[address].init),
-            state: deserialiseContractState(contracts[address].state),
-            stateLog: contracts[address].previousStates.map((state) =>
-              deserialiseContractState(state),
-            ),
-          },
-        };
-      }, {});
-    }
+    const filtered = Object.values(contracts).filter(item => {
+      return item.type === 'local';
+    });
+
+    return filtered.reduce((acc, item) => {
+      return {
+        ...acc,
+        [item.address]: {
+          ...contracts[item.address],
+          init: deserialiseContractState(item.init),
+          state: deserialiseContractState(item.state),
+          stateLog: item.previousStates.map((state) =>
+            deserialiseContractState(state),
+          ),
+        },
+      };
+    }, {});
 
     return contracts;
+  };
+
+  getLiveContracts = () => {
+    const { contracts } = this.props;
+
+    const filtered = Object.values(contracts).filter(item => {
+      return item.type === 'live';
+    });
+
+    return filtered.reduce((acc, item) => {
+      return {
+        ...acc,
+        [item.address]: {
+          ...contracts[item.address],
+          init: item.network,
+          state: item.network,
+          stateLog: null,
+        },
+      };
+    }, {});
   };
 
   render() {
@@ -121,7 +178,17 @@ export default class StateTree extends React.Component<Props, State> {
           />
         </ToggleWrapper>
         <div className="tree-wrapper">
-          <Typography variant="title">Contract State</Typography>
+          <Typography variant="title">Live Contracts State</Typography>
+          <JSONTree
+            hideRoot
+            data={this.getLiveContracts()}
+            getItemString={noop}
+            valueRenderer={valueRenderLive}
+            labelRenderer={labelRenderLive}
+          />
+        </div>
+        <div className="tree-wrapper">
+          <Typography variant="title">Local Contracts State</Typography>
           <JSONTree
             hideRoot
             data={this.getContracts()}
@@ -131,7 +198,7 @@ export default class StateTree extends React.Component<Props, State> {
           />
         </div>
         <div className="tree-wrapper">
-          <Typography variant="title">Account State</Typography>
+          <Typography variant="title">Local Accounts State</Typography>
           <JSONTree
             hideRoot
             data={this.props.accounts}
