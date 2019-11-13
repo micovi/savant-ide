@@ -27,6 +27,7 @@ const Matchers: { [type: string]: RegExp } = {
   Uint: /^Uint(32|64|128|256)$/,
   Int: /^Int(32|64|128|256)$/,
   BNum: /^BNum$/,
+  List: /^List (ByStr20)$/
 };
 
 const Validators: { [type: string]: RegExp } = {
@@ -35,6 +36,7 @@ const Validators: { [type: string]: RegExp } = {
   Uint: /^[0-9]+$/,
   Int: /^(-|\+)?[0-9]+$/,
   BNum: /^[1-9]([0-9])*$/,
+  List: /\w+/i
 };
 
 const validators: Validator[] = [

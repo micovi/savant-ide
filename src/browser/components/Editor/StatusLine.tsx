@@ -24,19 +24,19 @@ const StatusWrapper = styled.div`
   flex-direction: row;
   justify-content: space-between;
   padding: 6px 8px;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  z-index:999;
 `;
 
 interface Props {
   line: number;
   col: number;
-  blockHeight: number;
-  selectedFile: string;
 }
 
-const Statusline: React.SFC<Props> = ({ line, col, blockHeight, selectedFile }) => (
+const Statusline: React.SFC<Props> = ({ line, col }) => (
   <StatusWrapper>
-    <Typography variant="body2" color="primary">{`Block Height: ${blockHeight}`}</Typography>
-    <Typography variant="body2">{`${selectedFile}.scilla`}</Typography>
     <Typography variant="body2">{`Ln ${line}, Col ${col}`}</Typography>
   </StatusWrapper>
 );

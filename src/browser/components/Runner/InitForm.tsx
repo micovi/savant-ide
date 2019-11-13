@@ -168,6 +168,8 @@ export default class InitForm extends React.Component<Props, State> {
       return true;
     }
 
+    console.log(field);
+
     if (isField(field)) {
       return valid(field.type, field.value);
     }

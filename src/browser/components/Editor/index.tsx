@@ -63,6 +63,11 @@ const Wrapper = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
+  position: relative;
+  
+  .ace_scrollbar {
+    margin-right: -20px;
+  }
 `;
 
 const getKeyboardShortcuts: (
@@ -307,8 +312,6 @@ class ScillaEditor extends React.Component<Props, State> {
             <Statusline
               line={this.state.cursorPos.line}
               col={this.state.cursorPos.col}
-              blockHeight={this.props.blocknum}
-              selectedFile={contract.displayName}
             />
           </Wrapper>
         )}

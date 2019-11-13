@@ -27,6 +27,7 @@ import Navigator from './components/Navigator';
 import ScillaEditor from './components/Editor';
 import Runner from './components/Runner';
 import Footer from './components/Footer';
+import Topbar from './components/Topbar';
 
 const theme = createMuiTheme({
   palette: {
@@ -90,6 +91,7 @@ class App extends React.Component<Props, State> {
       <Provider store={this.props.store}>
         <MuiThemeProvider theme={theme}>
           <CssBaseline />
+          <Topbar />
           <Wrapper className="App">
             <Navigator toggle={this.toggleNavigator} isOpen={this.state.isNavigatorOpen} />
             <ScillaEditor />

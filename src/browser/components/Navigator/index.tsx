@@ -21,12 +21,13 @@ import { Dispatch } from 'redux';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 
-import AddIcon from '@material-ui/icons/Add';
-import HelpIcon from '@material-ui/icons/HelpOutlineOutlined';
+import FolderOpenOutlined from '@material-ui/icons/FolderOpenOutlined';
+import AddBoxOutlined from '@material-ui/icons/AddBoxOutlined';
 import ArrowLeft from '@material-ui/icons/ArrowLeft';
-import Button from '@material-ui/core/Button';
 import Drawer from '@material-ui/core/Drawer';
 import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
 import ListSubheader from '@material-ui/core/ListSubheader';
 
 import File from './File';
@@ -34,13 +35,12 @@ import { ApplicationState } from '../../store/index';
 import { ContractSrcFile } from '../../store/fs/types';
 import * as fsActions from '../../store/fs/actions';
 import { extractDefault } from '../../util/storage';
-import config from '../../config';
-import logo from './scilla-logo-color-transparent.png';
 
 const ZDrawer = styled(Drawer)`
+  overflow: hidden;
   & .paper {
     position: relative;
-    width: 250px;
+    width: 300px;
   }
 
   & .closed {
@@ -50,11 +50,29 @@ const ZDrawer = styled(Drawer)`
   & .adder {
     margin: 1em;
   }
-`;
 
-const Logo = styled.img`
-  max-width: 75%;
-  margin: 0 auto;
+  .subheader {
+    display:flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #fafafa;
+    font-weight:500;
+
+    .actions {
+      display:flex;
+      align-items: center;
+
+      .clickable {
+        opacity: 0.5;
+        transition: all 0.2s ease-in-out;
+        &:hover {
+          cursor: pointer;
+          opacity: 1;
+        }
+      }
+    }
+    
+  }
 `;
 
 const Arrow = styled(ArrowLeft)`
@@ -73,7 +91,13 @@ const Closer = styled.div`
   display: flex;
   align-items: center;
   position: relative;
-  width: 20px;
+  width: 2px;
+  transition: all .2s ease-in-out;
+  cursor: w-resize;
+
+  &:hover {
+    width: 20px;
+  }
 
   & .closer-icon {
     width: 20px;
@@ -117,12 +141,12 @@ class Navigator extends React.Component<Props, State> {
     this.props.init();
   }
 
-  toggle: React.MouseEventHandler<SVGSVGElement> = (e) => {
+  toggle: React.MouseEventHandler<SVGSVGElement | HTMLDivElement> = (e) => {
     e.preventDefault();
     this.props.toggle();
   };
 
-  handleNew = (e: React.MouseEvent<HTMLButtonElement>) => {
+  handleNew = (e: React.MouseEvent<HTMLButtonElement | SVGSVGElement>) => {
     e.preventDefault();
     this.setState({ isAdding: true });
   };
@@ -167,28 +191,13 @@ class Navigator extends React.Component<Props, State> {
           variant="persistent"
           classes={{ paper: classNames('paper', isOpen ? 'open' : 'closed') }}
         >
-          <Logo src={logo} />
-          <Button
-            color="primary"
-            classes={{ root: 'adder' }}
-            aria-label="Documentation"
-            size="small"
-            target="_blank"
-            href={config.SCILLA_DOCS}
-          >
-            <HelpIcon />
-            Scilla Docs
-          </Button>
-          <Button
-            color="primary"
-            classes={{ root: 'adder' }}
-            aria-label="Add Contract"
-            onClick={this.handleNew}
-          >
-            <AddIcon />
-            New Contract
-          </Button>
-          <List dense subheader={<ListSubheader component="div">Files</ListSubheader>}>
+          <List dense subheader={<ListSubheader className="subheader" component="div">
+            Files
+            <div className="actions">
+              <AddBoxOutlined className="clickable" onClick={this.handleNew} />
+              <FolderOpenOutlined className="clickable" />
+            </div>
+          </ListSubheader>}>
             {isAdding ? (
               <File
                 key="pending"
@@ -213,8 +222,15 @@ class Navigator extends React.Component<Props, State> {
               );
             })}
           </List>
+          <List dense subheader={<ListSubheader className="subheader" component="div">
+            Deployed Contracts
+          </ListSubheader>}>
+            <ListItem>
+              <ListItemText primary="zil1n7eej0xz35exrpwv8jdluvvepyk09qfnsy5j6s" secondary="3 min ago (HelloWorld.scilla)" />
+            </ListItem>
+          </List>
         </ZDrawer>
-        <Closer>
+        <Closer onClick={this.toggle}>
           <Arrow
             classes={{ root: classNames('closer-icon', !isOpen && 'closed') }}
             onClick={this.toggle}

@@ -197,7 +197,7 @@ class File extends React.Component<Props, State> {
             <WrappedListText
               classes={{ primary: classNames({ file: true, selected: this.props.isSelected }) }}
             >
-              <p
+              <span
                 tabIndex={this.state.isRenaming ? 0 : undefined}
                 ref={this.textNode}
                 onFocus={this.handleFocus}
@@ -210,7 +210,7 @@ class File extends React.Component<Props, State> {
                     : this.props.theme.palette.text.primary,
                 }}
               />
-              <p
+              <div
                 style={{
                   color: this.props.isSelected
                     ? this.props.theme.palette.primary.main
@@ -218,7 +218,7 @@ class File extends React.Component<Props, State> {
                 }}
               >
                 .scilla
-              </p>
+              </div>
             </WrappedListText>
           </ListItem>
         </ClickAwayListener>
