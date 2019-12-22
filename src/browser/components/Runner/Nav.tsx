@@ -17,14 +17,10 @@
 
 import * as React from 'react';
 import Paper from '@material-ui/core/Paper';
-import Tabs from '@material-ui/core/Tabs';
-import Tab from '@material-ui/core/Tab';
 
-import AssignmentIcon from '@material-ui/icons/Description';
-import PlayIcon from '@material-ui/icons/PlayCircleOutline';
-import SendIcon from '@material-ui/icons/Send';
-import LaunchIcon from '@material-ui/icons/Launch';
 import styled from 'styled-components';
+
+import Terminal from '../../assets/terminal.svg';
 
 import CallTab from './Call';
 import DeployTab from './Deploy';
@@ -57,6 +53,35 @@ const Content = styled.div`
   align-items: center;
 `;
 
+const TabsContainer = styled.div`
+ width: 60px;
+ background-color: #fff;
+ height: 100%;
+ position: absolute;
+ right: 0;
+ top: 0;
+ z-index: 10;
+ padding: 1rem;
+
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+
+ .clickable {
+    opacity: 0.5;
+    transition: all 0.2s ease-in-out;
+    &:hover {
+      cursor: pointer;
+      opacity: 1;
+    }
+  }
+`;
+
+const FlatIcon = styled.img`
+  height: 32px;
+`;
+
+
 interface Props {
   deployContract: Deployer;
   deployLiveContract: LiveDeployer;
@@ -79,8 +104,9 @@ export default class RunnerNav extends React.Component<Props, State> {
     value: 0,
   };
 
-  handleChange = (_: React.ChangeEvent<any>, value: number) => {
-    this.setState({ value });
+  handleTerminal = (e: React.MouseEvent<any>) => {
+    e.preventDefault();
+    this.setState({ value: 1 });
   };
 
   renderContent = () => {
@@ -129,20 +155,9 @@ export default class RunnerNav extends React.Component<Props, State> {
   render() {
     return (
       <Wrapper classes={{ root: 'root' }} square>
-        <Tabs
-          classes={{ root: 'tabs' }}
-          value={this.state.value}
-          onChange={this.handleChange}
-          fullWidth={false}
-          indicatorColor="secondary"
-          textColor="secondary"
-        >
-          <Tab style={{ minWidth: 40 }} icon={<PlayIcon />} label="Call" />
-          <Tab icon={<AssignmentIcon />} label="State" />
-          <Tab icon={<SendIcon />} label="Local Deploy" />
-          <Tab icon={<LaunchIcon />} label="Live Deploy" />
-          <Tab icon={<PlayIcon />} label="Live Call" />
-        </Tabs>
+        <TabsContainer>
+          <FlatIcon src={Terminal} className="clickable" onClick={this.handleTerminal} />
+        </TabsContainer>
         <Content>{this.renderContent()}</Content>
       </Wrapper>
     );

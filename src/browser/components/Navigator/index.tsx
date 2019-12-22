@@ -21,8 +21,6 @@ import { Dispatch } from 'redux';
 import { connect } from 'react-redux';
 import styled from 'styled-components';
 
-import FolderOpenOutlined from '@material-ui/icons/FolderOpenOutlined';
-import AddBoxOutlined from '@material-ui/icons/AddBoxOutlined';
 import ArrowLeft from '@material-ui/icons/ArrowLeft';
 import Drawer from '@material-ui/core/Drawer';
 import List from '@material-ui/core/List';
@@ -36,11 +34,17 @@ import { ContractSrcFile } from '../../store/fs/types';
 import * as fsActions from '../../store/fs/actions';
 import { extractDefault } from '../../util/storage';
 
+import fileAdd from '../../assets/file-add.svg';
+import contractImport from '../../assets/contract-import.svg';
+
 const ZDrawer = styled(Drawer)`
+  padding-top: 1rem;
+  background-color: #fff;
   overflow: hidden;
   & .paper {
     position: relative;
     width: 300px;
+    border-right: 0;
   }
 
   & .closed {
@@ -54,11 +58,17 @@ const ZDrawer = styled(Drawer)`
   .subheader {
     display:flex;
     align-items: center;
-    justify-content: space-between;
-    background-color: #fafafa;
-    font-weight:500;
+    // justify-content: space-between;
+    background-color: #fff;
+    font-weight:700;
+    text-transform: uppercase;
+    color: #ea8b0c;
+    padding-left: 2rem;
+    font-family: 'Montserrat';
+    font-size: 1rem;
 
     .actions {
+      margin-left: 1rem;
       display:flex;
       align-items: center;
 
@@ -91,19 +101,26 @@ const Closer = styled.div`
   display: flex;
   align-items: center;
   position: relative;
-  width: 2px;
+  width: 1rem;
   transition: all .2s ease-in-out;
   cursor: w-resize;
-
   &:hover {
     width: 20px;
+
+    &.closer-icon {
+      display:block;
+    }
   }
 
   & .closer-icon {
-    width: 20px;
-    font-size: 20px;
+    display: none;
     cursor: pointer;
   }
+`;
+
+
+const FlatIcon = styled.img`
+  height: 20px;
 `;
 
 interface OwnProps {
@@ -146,7 +163,7 @@ class Navigator extends React.Component<Props, State> {
     this.props.toggle();
   };
 
-  handleNew = (e: React.MouseEvent<HTMLButtonElement | SVGSVGElement>) => {
+  handleNew = (e: React.MouseEvent<any>) => {
     e.preventDefault();
     this.setState({ isAdding: true });
   };
@@ -194,8 +211,7 @@ class Navigator extends React.Component<Props, State> {
           <List dense subheader={<ListSubheader className="subheader" component="div">
             Files
             <div className="actions">
-              <AddBoxOutlined className="clickable" onClick={this.handleNew} />
-              <FolderOpenOutlined className="clickable" />
+              <FlatIcon src={fileAdd} className="clickable" onClick={this.handleNew} />
             </div>
           </ListSubheader>}>
             {isAdding ? (
@@ -223,7 +239,10 @@ class Navigator extends React.Component<Props, State> {
             })}
           </List>
           <List dense subheader={<ListSubheader className="subheader" component="div">
-            Deployed Contracts
+            Contracts
+            <div className="actions">
+              <FlatIcon src={contractImport} className="clickable" onClick={this.handleNew} />
+            </div>
           </ListSubheader>}>
             <ListItem>
               <ListItemText primary="zil1n7eej0xz35exrpwv8jdluvvepyk09qfnsy5j6s" secondary="3 min ago (HelloWorld.scilla)" />

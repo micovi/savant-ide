@@ -24,32 +24,40 @@ import config from '../../config';
 type Props = OwnProps;
 
 const TopContainer = styled.div`
-  background: #efefef;
+  background: #ea8b0c;
   position: relative;
   top:0;
   left: 0;
   width: 100%;
+  height: 48px;
   display: flex;
   align-items: center;
   z-index:9999;
-    padding-left: 1rem;
+    padding-left: 2rem;
     padding-right: 1rem;
+
   .left-side {
       display: flex;
       flex-grow: 1;
+      align-items: center;
      .title {
-        padding: 0.5rem;
-        border-right: 1px solid #ccc;
-        margin-right: 1rem;
+        background-color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding:0;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        margin-right: 2rem;
     }
   .item {
-      padding: 0.5rem;
-      color: #000;
+      padding: 1rem;
+      color: #fff;
       text-decoration: none;
       position: relative;
 
       &:hover {
-          background-color: #ccc;
+          background-color: #ffa910;
           cursor: pointer;
           .sub-menu {
               display: block;
@@ -60,7 +68,7 @@ const TopContainer = styled.div`
           display: none;
               width: 200px;
               position: absolute;
-              background-color:#efefef;
+              background-color:#ffa910;
           ul {
               list-style: none;
               padding:0;
@@ -71,7 +79,7 @@ const TopContainer = styled.div`
 `;
 
 const Logo = styled.img`
-  width: 28px;
+  height: 48px;
 `;
 
 interface OwnProps {
@@ -85,9 +93,8 @@ class Runner extends React.Component<Props> {
             <React.Fragment>
                 <TopContainer>
                     <div className="left-side">
-                        <Logo src={logo} />
                         <div className="title">
-                            Savant IDE
+                            <Logo src={logo} />
                         </div>
                         <div className="item">
                             File

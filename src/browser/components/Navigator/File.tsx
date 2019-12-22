@@ -43,8 +43,23 @@ interface State {
 }
 
 const WrappedListText = styled<ListItemTextProps>(ListItemText)`
-  & .file {
-    display: flex;
+  &.file-item {
+    padding-left: 1rem !important;
+    padding-bottom: 0.5rem !important;
+
+    font-size: 0.9rem;
+
+    &:hover {
+      .file {
+  font-weight: bold;
+      }
+    
+    }
+
+    .file {
+      display: flex;
+      padding-left: 1rem;
+    }
   }
 `;
 
@@ -192,9 +207,10 @@ class File extends React.Component<Props, State> {
             key="item"
             onClick={this.handleClick}
             onContextMenu={this.handleClick}
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: 'pointer', padding: 0 }}
           >
             <WrappedListText
+            className="file-item"
               classes={{ primary: classNames({ file: true, selected: this.props.isSelected }) }}
             >
               <span

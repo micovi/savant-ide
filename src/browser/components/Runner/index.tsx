@@ -37,8 +37,8 @@ type Props = OwnProps & MappedProps & DispatchProps;
 
 const ZDrawer = styled(Drawer)`
   &.open {
-    width: 40%;
-    min-width: 40%;
+    width: 30%;
+    min-width: 30%;
   }
 
   &.closed {

@@ -32,8 +32,8 @@ import Topbar from './components/Topbar';
 const theme = createMuiTheme({
   palette: {
     primary: {
-      light: '#7cf4f3',
-      main: '#42c1c0',
+      light: '#ffa910',
+      main: '#ea8b0c',
       dark: '#009090',
       contrastText: '#000000',
     },
@@ -43,6 +43,21 @@ const theme = createMuiTheme({
       dark: '#9ea6ff',
       contrastText: '#000000',
     },
+  },
+  typography: {
+    // Use the system font instead of the default Roboto font.
+    fontFamily: [
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
+      'Roboto',
+      '"Helvetica Neue"',
+      'Arial',
+      'sans-serif',
+      '"Apple Color Emoji"',
+      '"Segoe UI Emoji"',
+      '"Segoe UI Symbol"',
+    ].join(','),
   },
   overrides: {
     MuiButton: {
